@@ -1,73 +1,57 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI
 from pydantic import BaseModel, Field
-from typing import Optional
 import pickle
-import numpy as np
+import logging
+import pandas as pd
+from starlette.middleware.base import BaseHTTPMiddleware
+from fastapi.responses import RedirectResponse
 
-# Load the saved models
-with open('encoding.pkl', 'rb') as enc_file:
-    encoding = pickle.load(enc_file)
 
-with open('random_forest.sav', 'rb') as model_file:
-    model = pickle.load(model_file)
-
-# Initialize FastAPI instance
+# Initialize FastAPI app
 app = FastAPI()
 
-# Middleware for CORS
-from fastapi.middleware.cors import CORSMiddleware
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],  # Adjust this for specific domains in production
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+# Load encoders and the trained model
+with open('encoding.pkl', 'rb') as f:
+    encoding = pickle.load(f)
 
-# Root route
+car_model = pickle.load(open('random_forest.sav', 'rb'))
+
+# Define the input model
+class CarDetails(BaseModel):
+    name: str
+    km_driven: float = Field(..., ge=-50)
+    fuel: str
+    vehicle_age: float = Field(..., ge=-50)
+
 @app.get("/")
-def read_root():
-    return {"message": "Welcome to the Vehicle Selling Price Prediction API! Visit /docs for Swagger UI."}
+def redirect_to_docs():
+    return RedirectResponse(url="/docs")
 
-# Pydantic models for request and response validation
-class PredictionRequest(BaseModel):
-    name: str = Field(..., description="The name of the vehicle (categorical)")
-    km_driven: int = Field(..., ge=0, description="Kilometers driven (non-negative integer)")
-    fuel: str = Field(..., description="The type of fuel used (categorical)")
-    vehicle_age: int = Field(..., ge=0, le=50, description="Vehicle age in years (0-50)")
-
-class PredictionResponse(BaseModel):
-    selling_price: float = Field(..., description="Predicted selling price of the vehicle")
-    details: Optional[dict] = Field(None, description="Details of the input after encoding")
-
-# Endpoint for prediction
-@app.post("/predict", response_model=PredictionResponse)
-def predict(request: PredictionRequest):
+# Define the POST endpoint
+@app.post('/predict')
+def car_pred(input_parameters: CarDetails):
     try:
-        # Encode categorical features
-        if request.name not in encoding['name'].classes_:
-            raise HTTPException(status_code=400, detail=f"Name '{request.name}' is not recognized.")
-        if request.fuel not in encoding['fuel'].classes_:
-            raise HTTPException(status_code=400, detail=f"Fuel type '{request.fuel}' is not recognized.")
+        # Transform categorical
+        input_data = {
+            'encoded_name': encoding['name'].transform([input_parameters.name])[0]
+                               if input_parameters.name in encoding['name'].classes_
+                               else -1,
+            'km_driven': input_parameters.km_driven,
+            'encoded_fuel': encoding['fuel'].transform([input_parameters.fuel])[0]
+                             if input_parameters.fuel in encoding['fuel'].classes_
+                             else -1,
+            'vehicle_age': input_parameters.vehicle_age
+        }
 
-        encoded_name = encoding['name'].transform([request.name])[0]
-        encoded_fuel = encoding['fuel'].transform([request.fuel])[0]
+        input_data_df = pd.DataFrame([input_data])
 
-        # Prepare input array
-        input_data = np.array([[encoded_name, request.km_driven, encoded_fuel, request.vehicle_age]])
+        logging.info(f"Encoded input data: {input_data_df}")
 
-        # Make prediction
-        selling_price = model.predict(input_data)[0]
+        prediction = car_model.predict(input_data_df)
 
-        return PredictionResponse(
-            selling_price=float(selling_price),
-            details={
-                "encoded_name": encoded_name,
-                "encoded_fuel": encoded_fuel,
-                "km_driven": request.km_driven,
-                "vehicle_age": request.vehicle_age
-            }
-        )
+        return {"prediction": prediction[0]}
+
     except Exception as e:
-        raise HTTPException(status_code=400, detail=f"An error occurred: {e}")
+        logging.error(f"Error during prediction: {e}")
+        return {"error": "Prediction failed.", "details": str(e)}
