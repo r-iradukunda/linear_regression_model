@@ -57,7 +57,7 @@ class _HomeScreenState extends State<HomeScreen> {
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         setState(() {
-          _predictionResult = "Predicted Car Price: \$${data['Car_price']}";
+          _predictionResult = "Predicted Car Selling Price: ${data['Car_price']} Units";
         });
       } else {
         _showDialog("Error", "Failed to fetch prediction. Try again.");
