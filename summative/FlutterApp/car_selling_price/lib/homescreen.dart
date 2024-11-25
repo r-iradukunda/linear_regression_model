@@ -38,7 +38,7 @@ class _HomeScreenState extends State<HomeScreen> {
     try {
       // Prepare the API request
       const String apiUrl =
-          "https://linear-regression-model-0jqg.onrender.com";
+          "https://linear-regression-model-0jqg.onrender.com/predict/";
       final response = await http.post(
         Uri.parse(apiUrl),
         headers: {
@@ -111,7 +111,6 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: Lottie.asset(
                   'assets/car.json', // Path to your Lottie file
                   height: 200,
-                  // width: 200,
                   fit: BoxFit.cover,
                 ),
               ),
