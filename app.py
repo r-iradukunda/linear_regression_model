@@ -18,8 +18,8 @@ app = FastAPI(title="Car Selling Price Prediction API")
 class PredictionRequest(BaseModel):
     vehicle_age: int = Field(..., ge=0, le=50, description="Age of the vehicle in years")
     km_driven: int = Field(..., ge=0, description="Kilometers driven by the vehicle")
-    encoded_name: int = Field(..., ge=0, description="Encoded name of the car brand/model")
-    encoded_fuel: int = Field(..., ge=0, description="Encoded type of fuel used by the car")
+    name: str = Field(..., description="Name of the car brand/model")
+    fuel: str = Field(..., description="Type of fuel used by the car (e.g., diesel, petrol)")
 
 # CORS middleware configuration
 from fastapi.middleware.cors import CORSMiddleware
@@ -36,15 +36,23 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Load the encoders
+with open('encoding.pkl', 'rb') as f:
+    encoding = pickle.load(f)
+
 # Define the prediction endpoint
 @app.post("/predict")
 def predict(request: PredictionRequest):
+    # Encode categorical features
+    encoded_name = encoding['name'].transform([request.name])[0]
+    encoded_fuel = encoding['fuel'].transform([request.fuel])[0]
+    
     # Prepare the input data for prediction
     input_data = np.array([
         request.vehicle_age,
         request.km_driven,
-        request.encoded_name,
-        request.encoded_fuel
+        encoded_name,
+        encoded_fuel
     ]).reshape(1, -1)
     
     # Make the prediction
