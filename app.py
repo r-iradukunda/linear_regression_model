@@ -54,5 +54,5 @@ def predict(request: PredictionRequest):
     return {"predicted_selling_price": prediction}
 
 # Run the FastAPI application
-if _name_ == "__main__":
+if __name__ == "__main__":
     uvicorn.run("app:app", host="0.0.0.0", port=8000, reload=True)
