@@ -42,7 +42,7 @@ app.add_middleware(
 
 # Load the encoders
 try:
-    with open('encoding.pkl', 'rb') as f:
+    with open('encoding_2.pkl', 'rb') as f:
         encoding = pickle.load(f)
 except FileNotFoundError:
     raise Exception("Encoding file 'encoding.pkl' not found. Please check the file path.")
