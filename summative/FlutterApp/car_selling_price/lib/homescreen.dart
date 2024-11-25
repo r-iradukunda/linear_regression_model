@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'dart:convert'; // For JSON encoding and decoding
-import 'package:http/http.dart' as http; // For making HTTP requests
+import 'package:http/http.dart' as http; // HTTP requests
 import 'package:lottie/lottie.dart'; // For Lottie animations
 
 class HomeScreen extends StatefulWidget {
@@ -17,7 +17,7 @@ class _HomeScreenState extends State<HomeScreen> {
   final TextEditingController _kmDrivenController = TextEditingController();
   final TextEditingController _vehicleAgeController = TextEditingController();
 
-  String? _predictionResult; // To store the prediction result
+  String? _predictionResult;
 
   // Function to fetch the predicted price from FastAPI
   Future<void> _fetchPrediction() async {
@@ -106,10 +106,9 @@ class _HomeScreenState extends State<HomeScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const SizedBox(height: 40),
-              // Lottie Animation
               Center(
                 child: Lottie.asset(
-                  'assets/car.json', // Path to your Lottie file
+                  'assets/car.json',
                   height: 200,
                   fit: BoxFit.cover,
                 ),
