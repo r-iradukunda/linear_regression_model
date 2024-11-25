@@ -1,57 +1,68 @@
+# Import libraries
 from fastapi import FastAPI
 from pydantic import BaseModel, Field
+from typing import List
 import pickle
-import logging
-import pandas as pd
-from starlette.middleware.base import BaseHTTPMiddleware
-from fastapi.responses import RedirectResponse
+import uvicorn
+import numpy as np
+
+# Load the trained model
+model_filename = "random_forest.sav"  # Change this if using another model
+with open(model_filename, "rb") as f:
+    model = pickle.load(f)
+
+# Define the FastAPI app
+app = FastAPI(title="Car Selling Price Prediction API")
 
 
-# Initialize FastAPI app
-app = FastAPI()
+# Define the request body structure using Pydantic
+class PredictionRequest(BaseModel):
+    vehicle_age: int = Field(
+        ..., ge=0, le=50, description="Age of the vehicle in years"
+    )
+    km_driven: int = Field(..., ge=0, description="Kilometers driven by the vehicle")
+    encoded_name: int = Field(
+        ..., ge=0, description="Encoded name of the car brand/model"
+    )
+    encoded_fuel: int = Field(
+        ..., ge=0, description="Encoded type of fuel used by the car"
+    )
 
 
-# Load encoders and the trained model
-with open('encoding.pkl', 'rb') as f:
-    encoding = pickle.load(f)
+# CORS middleware configuration
+from fastapi.middleware.cors import CORSMiddleware
 
-car_model = pickle.load(open('random_forest.sav', 'rb'))
+origins = ["*"]
 
-# Define the input model
-class CarDetails(BaseModel):
-    name: str
-    km_driven: float = Field(..., ge=-50)
-    fuel: str
-    vehicle_age: float = Field(..., ge=-50)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
-@app.get("/")
-def redirect_to_docs():
-    return RedirectResponse(url="/docs")
 
-# Define the POST endpoint
-@app.post('/predict')
-def car_pred(input_parameters: CarDetails):
-    try:
-        # Transform categorical
-        input_data = {
-            'encoded_name': encoding['name'].transform([input_parameters.name])[0]
-                               if input_parameters.name in encoding['name'].classes_
-                               else -1,
-            'km_driven': input_parameters.km_driven,
-            'encoded_fuel': encoding['fuel'].transform([input_parameters.fuel])[0]
-                             if input_parameters.fuel in encoding['fuel'].classes_
-                             else -1,
-            'vehicle_age': input_parameters.vehicle_age
-        }
+# Define the prediction endpoint
+@app.post("/predict")
+def predict(request: PredictionRequest):
+    # Prepare the input data for prediction
+    input_data = np.array(
+        [
+            request.vehicle_age,
+            request.km_driven,
+            request.encoded_name,
+            request.encoded_fuel,
+        ]
+    ).reshape(1, -1)
 
-        input_data_df = pd.DataFrame([input_data])
+    # Make the prediction
+    prediction = model.predict(input_data)[0]
 
-        logging.info(f"Encoded input data: {input_data_df}")
+    # Return the prediction
+    return {"predicted_selling_price": prediction}
 
-        prediction = car_model.predict(input_data_df)
 
-        return {"prediction": prediction[0]}
-
-    except Exception as e:
-        logging.error(f"Error during prediction: {e}")
-        return {"error": "Prediction failed.", "details": str(e)}
+# Run the FastAPI application
+if __name__ == "__main__":
+    uvicorn.run("__main__:app", host="127.0.0.1", port=8000, reload=True)
