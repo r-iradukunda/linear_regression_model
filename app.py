@@ -1,15 +1,19 @@
 # Import libraries
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
 from typing import List
 import pickle
 import uvicorn
 import numpy as np
+import sklearn
 
 # Load the trained model
 model_filename = "random_forest.sav"  # Change this if using another model
-with open(model_filename, "rb") as f:
-    model = pickle.load(f)
+try:
+    with open(model_filename, "rb") as f:
+        model = pickle.load(f)
+except FileNotFoundError:
+    raise Exception(f"Model file '{model_filename}' not found. Please check the file path.")
 
 # Define the FastAPI app
 app = FastAPI(title="Car Selling Price Prediction API")
@@ -37,15 +41,26 @@ app.add_middleware(
 )
 
 # Load the encoders
-with open('encoding.pkl', 'rb') as f:
-    encoding = pickle.load(f)
+try:
+    with open('encoding.pkl', 'rb') as f:
+        encoding = pickle.load(f)
+except FileNotFoundError:
+    raise Exception("Encoding file 'encoding.pkl' not found. Please check the file path.")
 
 # Define the prediction endpoint
 @app.post("/predict")
 def predict(request: PredictionRequest):
-    # Encode categorical features
-    encoded_name = encoding['name'].transform([request.name])[0]
-    encoded_fuel = encoding['fuel'].transform([request.fuel])[0]
+    try:
+        # Encode categorical features
+        if request.name not in encoding['name'].classes_:
+            raise HTTPException(status_code=400, detail=f"Car name '{request.name}' not recognized. Available options: {list(encoding['name'].classes_)}")
+        if request.fuel not in encoding['fuel'].classes_:
+            raise HTTPException(status_code=400, detail=f"Fuel type '{request.fuel}' not recognized. Available options: {list(encoding['fuel'].classes_)}")
+        
+        encoded_name = encoding['name'].transform([request.name])[0]
+        encoded_fuel = encoding['fuel'].transform([request.fuel])[0]
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
     
     # Prepare the input data for prediction
     input_data = np.array([
@@ -56,7 +71,10 @@ def predict(request: PredictionRequest):
     ]).reshape(1, -1)
     
     # Make the prediction
-    prediction = model.predict(input_data)[0]
+    try:
+        prediction = model.predict(input_data)[0]
+    except sklearn.exceptions.NotFittedError as e:
+        raise HTTPException(status_code=500, detail="Model is not fitted. Please check the model file.")
     
     # Return the prediction
     return {"predicted_selling_price": prediction}
