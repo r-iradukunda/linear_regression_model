@@ -2,10 +2,13 @@
 This repository contains a Selling price Prediction project that consists of three main components: a machine learning model, a FastAPI backend, and a Flutter frontend.
 
 **Project Structure**
+```
 summative/
 ├── API/
 ├── flutter_app/
 └── linear_regression/
+```
+
 ## 1. API
 The API directory contains the FastAPI backend that serves the machine learning model and handles prediction requests.
 
@@ -20,9 +23,13 @@ Other necessary files for model loading and preprocessing.
 How to Run Locally
 Navigate to the API directory.
 Install the required dependencies:
-```pip install -r requirements.txt```
+```bash
+pip install -r requirements.txt
+```
 Start the FastAPI server:
-```uvicorn app.main:app --reload```
+```bash
+uvicorn app.main:app --reload
+```
 ## 2. flutter_app
 The flutter_app directory contains the Flutter frontend application that allows users to input TV features and get price predictions.
 
