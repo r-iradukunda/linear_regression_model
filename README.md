@@ -46,11 +46,7 @@ Run the Flutter application:
 ## 3. linear_regression
 The linear_regression directory contains the Jupyter notebooks and scripts used for training and evaluating the machine learning model.
 
-Key Files
-notebooks/
-train_model.ipynb: The notebook used for training the linear regression model.
-evaluate_model.ipynb: The notebook used for evaluating the model.
-How to Use
+**How to Use:**
 Navigate to the linear_regression directory.
 Install the required dependencies:
 ```bash
@@ -84,7 +80,7 @@ The Flutter application provides a user-friendly interface for inputting car det
 Make sure the FastAPI backend URL in the Flutter application is set to the correct Render address:
 
 ```bash
-final String apiUrl = 'https://tv-prices-api.onrender.com/predict';
+final String apiUrl = 'https://linear-regression-model-0jqg.onrender.com/predict/';
 ```
 
 Click for here [YouTube_Demo_Video](https://youtu.be/mysYXTmumiA)
