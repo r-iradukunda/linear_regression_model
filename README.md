@@ -58,6 +58,7 @@ The FastAPI backend is deployed on Render and provides an endpoint for predictin
 POST /predict: Predicts the selling price of car given its features.
 Example request:
 
+```bash
 curl -X 'POST' \
   'https://linear-regression-model-0jqg.onrender.com/predict/' \
   -H 'accept: application/json' \
@@ -68,6 +69,7 @@ curl -X 'POST' \
   "km_driven": 4500,
   "vehicle_age": 2
 }'
+```
 
 ## Flutter Frontend
 The Flutter application provides a user-friendly interface for inputting car details and displaying the predicted Selling price.
