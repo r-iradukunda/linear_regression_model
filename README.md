@@ -1,7 +1,7 @@
 # Car Selling Price Prediction Project:
 This repository contains a Selling price Prediction project that consists of three main components: a machine learning model, a FastAPI backend, and a Flutter frontend.
 
-***Project Structure***
+**Project Structure**
 summative/
 ├── API/
 ├── flutter_app/
