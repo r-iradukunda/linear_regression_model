@@ -12,15 +12,14 @@ summative/
 ## 1. API
 The API directory contains the FastAPI backend that serves the machine learning model and handles prediction requests.
 
-Key Files
+**Key Files**
 app/
-main.py: The main FastAPI application file.
+app_main.py: The main FastAPI application file.
 linear_regression_model.pkl: The trained linear regression model.
-scaler.pkl: The scaler used for preprocessing.
-poly.pkl: The polynomial features transformer.
-label_encoders.pkl: The label encoders for categorical features.
+encoding.pkl: The polynomial features transformer.
+random_forest.sav: The label encoders for categorical features.
 Other necessary files for model loading and preprocessing.
-How to Run Locally
+**How to Run Locally:**
 Navigate to the API directory.
 Install the required dependencies:
 ```bash
@@ -36,7 +35,7 @@ The flutter_app directory contains the Flutter frontend application that allows 
 Key Files
 lib/
 main.dart: The main entry point of the Flutter application.
-How to Run
+**How to Run:**
 Ensure you have Flutter installed on your system.
 Navigate to the flutter_app directory.
 Get the Flutter dependencies:
